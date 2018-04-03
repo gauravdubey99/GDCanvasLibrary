@@ -1,4 +1,4 @@
-package com.canvastools.canvastools
+package com.canvastools
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4

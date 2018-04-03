@@ -1,4 +1,4 @@
-package com.canvastools.canvastools
+package com.canvastools.sampleproject
 
 import org.junit.Test
 

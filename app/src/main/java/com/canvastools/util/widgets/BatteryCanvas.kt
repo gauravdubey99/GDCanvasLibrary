@@ -1,4 +1,4 @@
-package com.canvastools.canvastools.util.widgets
+package com.canvastools.util.widgets
 
 import android.content.Context
 import android.graphics.Canvas
@@ -23,6 +23,7 @@ class BatteryCanvas(context : Context , attrSet : AttributeSet) : View(context, 
     private var intervals : Int = 0
     private lateinit var colorList : IntArray
     private var shouldMaintainAspectRatio : Boolean = false
+    private var barsToDraw = 0
 
     private fun initInnerBar() {
         rectInnerBatteryBar.left = 0f
@@ -54,30 +55,38 @@ class BatteryCanvas(context : Context , attrSet : AttributeSet) : View(context, 
         this.maxValue = maxValue
         this.intervals = intervals
         this.colorList = colorList
+        barsToDraw = minValue / intervals
         this.shouldMaintainAspectRatio = shouldMaintainAspectRatio
         radius = strokeWidth *2
         initializePaints()
     }
 
-    fun initializePaints(){
+    /**
+     * @method updateProgress updates the Battery Status if the Progress changed enough
+     * to create any impact on the View
+     */
+    fun updateProgress(progress : Int) {
+        barsToDraw = progress
+    }
+
+    private fun initializePaints(){
         redPaint = Paint()
         redPaint.style = Paint.Style.STROKE
         redPaint.color = ContextCompat.getColor(context ,android.R.color.holo_red_dark)
         redPaint.strokeWidth = strokeWidth
     }
 
-    fun intitializeBatterySkeleton(){
+    private fun intitializeBatterySkeleton(){
         rectOuterBattery.left = strokeWidth
         rectOuterBattery.top = strokeWidth
         rectOuterBattery.right = measuredWidth.toFloat() - (strokeWidth *2)
         rectOuterBattery.bottom = measuredHeight.toFloat() - (strokeWidth*2)
-
     }
 
     /**
      * @method createInnerBatteryBar creates the Battery Status bar inside the
      */
-    fun createInnerBatteryBar() : RectF{
+    private fun createInnerBatteryBar() : RectF{
 
         val eachWidthOfbar = (rectOuterBattery.right - rectOuterBattery.left - (strokeWidth * (intervals +3))) /  intervals
 
@@ -89,6 +98,21 @@ class BatteryCanvas(context : Context , attrSet : AttributeSet) : View(context, 
         return rectInnerBatteryBar
     }
 
+    private fun getColorOfBar() : Int {
+        val totalBars = maxValue / intervals
+        val colorPerUnits = totalBars / colorList.size
+        var posValue = 0
+        posValue = when(barsToDraw / colorPerUnits){
+            in 0..(colorList.size -1) -> {
+                barsToDraw / colorPerUnits
+            }
+            else -> {
+                colorList.size -1
+            }
+        }
+        return ContextCompat.getColor(context , colorList[posValue])
+    }
+
     /**
      * call invalidate() method to redraw the complete view
      */
@@ -97,6 +121,8 @@ class BatteryCanvas(context : Context , attrSet : AttributeSet) : View(context, 
 
         intitializeBatterySkeleton()
         initInnerBar()
+        redPaint.color = getColorOfBar()
+
         redPaint.style = Paint.Style.STROKE
         with(path) {
             addRoundRect(rectOuterBattery ,radius, radius,Path.Direction.CCW )
@@ -105,7 +131,7 @@ class BatteryCanvas(context : Context , attrSet : AttributeSet) : View(context, 
 
         redPaint.style = Paint.Style.FILL
 
-        for(x in 1..(intervals)){
+        for(x in 1..(barsToDraw)){
             canvas?.drawRoundRect(createInnerBatteryBar() , radius, radius, redPaint)
         }
         canvas?.drawRoundRect(updateTopBatteryPoint() , 50f,0f,redPaint)
@@ -123,5 +149,6 @@ class BatteryCanvas(context : Context , attrSet : AttributeSet) : View(context, 
 
         return rectOuterBattery
     }
+
 
 }
